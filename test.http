@@ -1,0 +1,65 @@
+### Job Scheduler API — requires the "REST Client" VS Code extension
+### Click "Send Request" above any line below to run it.
+### App must be running on localhost:8080 first.
+
+@baseUrl = http://localhost:8080/api/jobs
+
+### 1. Submit a reliable job (ECHO)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "type": "ECHO",
+  "payload": "hello world",
+  "priority": 3,
+  "maxAttempts": 3
+}
+
+### 2. Submit a flaky job (watch retries / dead-lettering)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "type": "FLAKY",
+  "payload": "test-1",
+  "priority": 5,
+  "maxAttempts": 4
+}
+
+### 3. Submit a high-priority job (jumps the queue ahead of lower priority)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "type": "ECHO",
+  "payload": "urgent job",
+  "priority": 1,
+  "maxAttempts": 1
+}
+
+### 4. Get a single job by id — replace {id} with a real id from a response above
+GET {{baseUrl}}/00000000-0000-0000-0000-000000000000
+
+### 5. List all jobs
+GET {{baseUrl}}
+
+### 6. List only jobs with a specific status
+GET {{baseUrl}}?status=SUCCESS
+
+###
+GET {{baseUrl}}?status=RETRYING
+
+###
+GET {{baseUrl}}?status=DEAD_LETTER
+
+### 7. Cancel a job — only works while it's still PENDING
+DELETE {{baseUrl}}/00000000-0000-0000-0000-000000000000
+
+### 8. Submit with an unknown type — should return 400, not a silent failure
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "type": "NOT_A_REAL_TYPE",
+  "payload": "should fail validation"
+}

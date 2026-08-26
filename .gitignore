@@ -1,0 +1,41 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Compiled class files
+*.class
+
+# H2 database files (local dev data - don't commit)
+data/
+*.db
+*.mv.db
+*.trace.db
+
+# Spring Boot
+*.log
+application-local.yml
+application-local.properties
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IntelliJ (in case you switch later)
+.idea/
+*.iml
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment/secrets
+.env
+*.env.local

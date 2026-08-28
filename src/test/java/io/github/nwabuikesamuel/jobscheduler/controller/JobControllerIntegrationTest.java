@@ -2,6 +2,8 @@ package io.github.nwabuikesamuel.jobscheduler.controller;
 
 import io.github.nwabuikesamuel.jobscheduler.dto.JobResponse;
 import io.github.nwabuikesamuel.jobscheduler.dto.JobSubmitRequest;
+import io.github.nwabuikesamuel.jobscheduler.model.Job;
+import io.github.nwabuikesamuel.jobscheduler.model.JobStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * closest thing to testing what a real client would experience.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
 class JobControllerIntegrationTest {
 
@@ -43,25 +46,52 @@ class JobControllerIntegrationTest {
         //       POST to url("/api/jobs") via restTemplate.postForEntity(...),
         //       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED),
         //       assertThat(response.getBody().status).isEqualTo(JobStatus.PENDING).
-        throw new UnsupportedOperationException("not implemented yet");
+        JobSubmitRequest request = new JobSubmitRequest();
+        request.setType("ECHO");    
+        request.setPayload("hello");
+        request.setPriority(3);
+        request.setMaxAttempts(3);
+        ResponseEntity<JobResponse> response = restTemplate.postForEntity(url("/api/jobs"), request, JobResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().status).isEqualTo(JobStatus.PENDING);
     }
 
     @Test
     void submittingUnknownJobType_returns400() {
         // TODO: POST with type="NOT_REAL", assert 400.
-        throw new UnsupportedOperationException("not implemented yet");
+        JobSubmitRequest request = new JobSubmitRequest();
+        request.setType("NOT_REAL");
+        request.setPayload("test");
+        ResponseEntity<JobResponse> response = restTemplate.postForEntity(url("/api/jobs"), request, JobResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     void submittingBlankType_returns400_validationFailure() {
         // TODO: POST with type="" (or null), assert 400.
-        throw new UnsupportedOperationException("not implemented yet");
+        JobSubmitRequest request = new JobSubmitRequest();
+        request.setType("");
+        request.setPayload("test");
+        ResponseEntity<String> response = restTemplate.postForEntity(url("/api/jobs"), request, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     void submittingPriorityOutOfRange_returns400() {
         // TODO: POST with priority=0 and separately priority=11, assert both 400.
-        throw new UnsupportedOperationException("not implemented yet");
+        JobSubmitRequest requestLow = new JobSubmitRequest();
+        requestLow.setType("ECHO");
+        requestLow.setPayload("test");
+        requestLow.setPriority(0);
+        ResponseEntity<String> responseLow = restTemplate.postForEntity(url("/api/jobs"), requestLow, String.class);
+        assertThat(responseLow.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        JobSubmitRequest requestHigh = new JobSubmitRequest();
+        requestHigh.setType("ECHO");
+        requestHigh.setPayload("test");
+        requestHigh.setPriority(11);
+        ResponseEntity<String> responseHigh = restTemplate.postForEntity(url("/api/jobs"), requestHigh, String.class);
+        assertThat(responseHigh.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST); 
     }
 
     // --- A3: retrieval and listing ---
@@ -70,7 +100,17 @@ class JobControllerIntegrationTest {
     void gettingJobById_afterSubmission_returnsMatchingFields() {
         // TODO: submit a job, take its id from the response, GET /api/jobs/{id},
         //       assert the returned type/payload/priority match what was submitted.
-        throw new UnsupportedOperationException("not implemented yet");
+        JobSubmitRequest request = new JobSubmitRequest();
+        request.setType("ECHO");
+        request.setPayload("hello");
+        request.setPriority(3);
+        ResponseEntity<JobResponse> submitResponse = restTemplate.postForEntity(url("/api/jobs"), request, JobResponse.class);
+        String jobId = submitResponse.getBody().id;
+        ResponseEntity<JobResponse> getResponse = restTemplate.getForEntity(url("/api/jobs/" + jobId), JobResponse.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().type).isEqualTo(request.getType  ());
+        // assertThat(getResponse.getBody().payload).isEqualTo(request.getPayload()); // Note: JobResponse doesn't have payload field, so this line is commented out.
+        assertThat(getResponse.getBody().priority).isEqualTo(request.getPriority());
     }
 
     @Test

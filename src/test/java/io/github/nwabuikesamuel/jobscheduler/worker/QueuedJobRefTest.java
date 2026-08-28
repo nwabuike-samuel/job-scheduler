@@ -19,7 +19,9 @@ class QueuedJobRefTest {
         // priority 1 = highest priority (see the field comment on Job.priority)
         // TODO: create two QueuedJobRef instances with priority 1 and priority 5,
         //       same createdAt, and assert compareTo() puts priority 1 first.
-        throw new UnsupportedOperationException("not implemented yet");
+        QueuedJobRef highPriority = new QueuedJobRef("1",1, Instant.now());
+        QueuedJobRef lowPriority = new QueuedJobRef("2",5, Instant.now());
+        assertThat(highPriority.compareTo(lowPriority)).isLessThan(0);
     }
 
     @Test
@@ -27,16 +29,24 @@ class QueuedJobRefTest {
         // TODO: create two refs with the same priority but different createdAt
         //       (e.g. Instant.now() and Instant.now().plusSeconds(10)),
         //       assert the older one sorts first.
-        throw new UnsupportedOperationException("not implemented yet");
+        QueuedJobRef older = new QueuedJobRef("3", 3, Instant.now());
+        QueuedJobRef newer = new QueuedJobRef("4", 3, Instant.now().plusSeconds(10));
+        assertThat(older.compareTo(newer)).isLessThan(0);
+        System.out.println("Older createdAt: " + older.createdAt() + ", Newer createdAt: " + newer.createdAt());
     }
 
     @Test
-    void priorityBlockingQueue_drainsInExpectedOrder_whenInsertedOutOfOrder() {
+    void priorityBlockingQueue_drainsInExpectedOrder_whenInsertedOutOfOrder() throws InterruptedException {
         PriorityBlockingQueue<QueuedJobRef> queue = new PriorityBlockingQueue<>();
 
         // TODO: insert refs in a deliberately scrambled order (e.g. priority 5, then 1, then 3),
         //       then queue.take() three times and assert they come out 1, 3, 5.
         //       assertThat(...) from AssertJ is already imported for you above.
-        throw new UnsupportedOperationException("not implemented yet");
+        queue.add(new QueuedJobRef("45", 5, Instant.now()));
+        queue.add(new QueuedJobRef("125", 1, Instant.now()));
+        queue.add(new QueuedJobRef("93", 3, Instant.now()));
+        assertThat(queue.take().priority()).isEqualTo(1);
+        assertThat(queue.take().priority()).isEqualTo(3);
+        assertThat(queue.take().priority()).isEqualTo(5);
     }
 }

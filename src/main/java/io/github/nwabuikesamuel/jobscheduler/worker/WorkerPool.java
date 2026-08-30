@@ -24,6 +24,9 @@ public class WorkerPool {
     private final JobExecutionService jobExecutionService;
     private final JobRepository jobRepository;
 
+    @Value("${scheduler.enabled:true}")
+    private boolean schedulerEnabled;
+
     @Value("${scheduler.worker-count:4}")
     private int workerCount;
 
@@ -38,6 +41,10 @@ public class WorkerPool {
 
     @PostConstruct
     public void start() {
+        if (!schedulerEnabled) {
+            log.info("Job scheduler is disabled. No worker threads will be started.");
+            return;
+        }
         recoverInFlightJobs();
 
         executor = Executors.newFixedThreadPool(workerCount);
@@ -84,5 +91,36 @@ public class WorkerPool {
         if (executor != null) {
             executor.shutdownNow();
         }
+    }
+
+    public synchronized void pause() {
+        if (!running) {
+            return;
+        }
+
+        running = false;
+
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
+        }
+
+        log.info("Worker pool paused");
+    }
+
+    public synchronized void resume() {
+        if (running) {
+            return;
+        }
+
+        running = true;
+
+        executor = Executors.newFixedThreadPool(workerCount);
+
+        for (int i = 0; i < workerCount; i++) {
+            executor.submit(this::workerLoop);
+        }
+
+        log.info("Worker pool resumed with {} workers", workerCount);
     }
 }

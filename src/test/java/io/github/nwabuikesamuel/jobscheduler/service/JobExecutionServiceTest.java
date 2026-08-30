@@ -31,11 +31,14 @@ class JobExecutionServiceTest {
     @Mock
     JobHandlerRegistry handlerRegistry;
 
+    @Mock
+    JobStateService jobStateService;
+
     JobExecutionService executionService;
 
     @BeforeEach
     void setUp() {
-        executionService = new JobExecutionService(jobRepository, handlerRegistry);
+        executionService = new JobExecutionService(jobRepository, handlerRegistry, jobStateService);
     }
 
     // --- A6: retry and backoff ---

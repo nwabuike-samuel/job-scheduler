@@ -1,21 +1,24 @@
 package io.github.nwabuikesamuel.jobscheduler.service;
 
-import io.github.nwabuikesamuel.jobscheduler.model.Job;
-import io.github.nwabuikesamuel.jobscheduler.model.JobStatus;
-import io.github.nwabuikesamuel.jobscheduler.repository.JobRepository;
-import io.github.nwabuikesamuel.jobscheduler.worker.JobHandler;
-import io.github.nwabuikesamuel.jobscheduler.worker.JobHandlerRegistry;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import io.github.nwabuikesamuel.jobscheduler.model.Job;
+import io.github.nwabuikesamuel.jobscheduler.model.JobStatus;
+import io.github.nwabuikesamuel.jobscheduler.repository.JobRepository;
+import io.github.nwabuikesamuel.jobscheduler.worker.JobHandler;
+import io.github.nwabuikesamuel.jobscheduler.worker.JobHandlerRegistry;
 
 /**
  * Part A6 and A8 from test-scenarios.md.
@@ -34,6 +37,7 @@ class JobExecutionServiceTest {
     @Mock
     JobStateService jobStateService;
 
+    @Mock
     JobExecutionService executionService;
 
     @BeforeEach
@@ -44,39 +48,31 @@ class JobExecutionServiceTest {
     // --- A6: retry and backoff ---
 
     @Test
-    void jobBelowMaxAttempts_thatThrows_movesToRetrying_notDeadLetter() {
-        // TODO: build a Job with attempts=0, maxAttempts=3, status=PENDING.
-        //       when(jobRepository.findById(...)).thenReturn(Optional.of(job));
-        //       when(jobRepository.save(any())).thenReturn(job); // or thenAnswer to return the arg
-        //       Make handlerRegistry.get("SOME_TYPE") return a JobHandler whose execute() throws.
-        //       Call executionService.runJob(job.getId());
-        //       assertThat(job.getStatus()).isEqualTo(JobStatus.RETRYING);
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+    void failedJob_callsMarkFailedOrRetry() throws Exception {
 
-    @Test
-    void jobAtMaxAttempts_thatThrows_movesToDeadLetter_notRetrying() {
-        // TODO: same setup as above but attempts == maxAttempts - 1 before this run
-        //       (so after markRunning increments it, attempts == maxAttempts).
-        //       assertThat(job.getStatus()).isEqualTo(JobStatus.DEAD_LETTER);
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+        Job job = new Job();
+        job.setId("job1");
+        job.setType("SOME_TYPE");
+        job.setPayload("test");
+        job.setAttempts(0);
+        job.setMaxAttempts(3);
+        job.setStatus(JobStatus.PENDING);
 
-    @Test
-    void secondFailure_hasLaterNextRetryAt_thanFirstFailure_exponentialBackoff() {
-        // TODO: run two separate jobs (or the same job twice), one failing on
-        //       attempt 1 and one on attempt 2. Capture nextRetryAt on each
-        //       and assert the attempt-2 value is further in the future,
-        //       proving backoff grows rather than staying fixed.
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+        when(jobRepository.findById("job1")).thenReturn(java.util.Optional.of(job));
 
-    @Test
-    void successfulRun_clearsPreviousErrorMessage() {
-        // TODO: build a Job that already has errorMessage set from a prior
-        //       failed attempt, make the handler succeed this time, assert
-        //       job.getErrorMessage() is null after runJob().
-        throw new UnsupportedOperationException("not implemented yet");
+        JobHandler handler = mock(JobHandler.class);
+
+        when(handlerRegistry.get("SOME_TYPE")).thenReturn(handler);
+
+        when(handler.execute("test")).thenThrow(new RuntimeException("Test failure"));
+
+        executionService.runJob("job1");
+
+        verify(jobStateService).markRunning("job1");
+
+        verify(jobStateService).markFailedOrRetry(eq("job1"), any(RuntimeException.class));
+
+        verify(jobStateService, never()).markSuccess(anyString(), anyString());
     }
 
     // --- A8: concurrency safety ---

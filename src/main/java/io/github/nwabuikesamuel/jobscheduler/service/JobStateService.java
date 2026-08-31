@@ -62,9 +62,7 @@ public class JobStateService {
     }
 
     @Transactional
-    public void markFailedOrRetry(
-            String jobId,
-            Exception ex) {
+    public void markFailedOrRetry(String jobId, Exception ex) {
 
         Job job = jobRepository.findById(jobId).orElse(null);
 
@@ -87,13 +85,9 @@ public class JobStateService {
 
         } else {
 
-            long backoffSeconds =
-                    BASE_BACKOFF.getSeconds() *
-                    (1L << (job.getAttempts() - 1));
+            long backoffSeconds = BASE_BACKOFF.getSeconds() * (1L << (job.getAttempts() - 1));
 
-            job.setNextRetryAt(
-                    Instant.now().plusSeconds(backoffSeconds)
-            );
+            job.setNextRetryAt(Instant.now().plusSeconds(backoffSeconds));
 
             job.setStatus(JobStatus.RETRYING);
 

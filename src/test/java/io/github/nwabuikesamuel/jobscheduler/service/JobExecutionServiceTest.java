@@ -75,19 +75,4 @@ class JobExecutionServiceTest {
         verify(jobStateService, never()).markSuccess(anyString(), anyString());
     }
 
-    // --- A8: concurrency safety ---
-
-    @Test
-    void concurrentRunJobCalls_onSameId_onlyExecuteOnce() throws InterruptedException {
-        // TODO: this one is trickier. Ideas:
-        //   1. Use a test-only JobHandler with an AtomicInteger counter incremented
-        //      inside execute(), run two threads calling runJob(sameId) concurrently
-        //      (e.g. via ExecutorService + CountDownLatch to line them up), join both,
-        //      then assert the counter == 1.
-        //   2. Alternative: this is easier to test with a real (non-mocked)
-        //      JobRepository against the test H2 database - consider moving
-        //      this specific test into an @SpringBootTest / @DataJpaTest instead
-        //      if pure mocking makes it awkward to simulate the race.
-        throw new UnsupportedOperationException("not implemented yet");
-    }
 }

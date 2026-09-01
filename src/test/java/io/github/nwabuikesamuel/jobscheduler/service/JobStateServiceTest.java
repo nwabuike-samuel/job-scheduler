@@ -115,6 +115,7 @@ public class JobStateServiceTest {
 
         when(jobRepository.save(any(Job.class))).thenAnswer(invocation -> invocation.getArgument(0));
         jobStateService.markSuccess("job3", "Successful result");
+        assertThat(job.getStatus()).isEqualTo(JobStatus.SUCCESS);
         assertThat(job.getErrorMessage()).isNull();
         assertThat(job.getResult()).isEqualTo("Successful result");
     }

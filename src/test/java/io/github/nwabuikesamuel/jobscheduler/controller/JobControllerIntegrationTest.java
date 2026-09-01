@@ -2,7 +2,6 @@ package io.github.nwabuikesamuel.jobscheduler.controller;
 
 import io.github.nwabuikesamuel.jobscheduler.dto.JobResponse;
 import io.github.nwabuikesamuel.jobscheduler.dto.JobSubmitRequest;
-import io.github.nwabuikesamuel.jobscheduler.model.Job;
 import io.github.nwabuikesamuel.jobscheduler.model.JobStatus;
 import io.github.nwabuikesamuel.jobscheduler.worker.WorkerPool;
 import org.junit.jupiter.api.Test;

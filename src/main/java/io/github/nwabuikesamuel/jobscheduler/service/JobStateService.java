@@ -25,18 +25,23 @@ public class JobStateService {
     }
 
     @Transactional
-    public void markRunning(String jobId) {
+    public boolean markRunning(String jobId) {
 
         Job job = jobRepository.findById(jobId).orElse(null);
 
         if (job == null) {
-            return;
+            return false;
+        }
+
+        if (job.getStatus() != JobStatus.PENDING && job.getStatus() != JobStatus.RETRYING) {
+            return false;
         }
 
         job.setAttempts(job.getAttempts() + 1);
         job.setStatus(JobStatus.RUNNING);
 
         jobRepository.save(job);
+        return true;
     }
 
     @Transactional

@@ -38,7 +38,11 @@ public class JobExecutionService {
         }
 
         try {
-            jobStateService.markRunning(jobId);
+            boolean claimed = jobStateService.markRunning(jobId);
+            if (!claimed) {
+                log.info("Job {} was already claimed by another worker or is not in a runnable state.", jobId);
+                return;
+            }
             // Reload the job after markRunning to ensure we have the latest state and attempts count
             job = jobRepository.findById(jobId).orElse(null);
             if (job == null) {

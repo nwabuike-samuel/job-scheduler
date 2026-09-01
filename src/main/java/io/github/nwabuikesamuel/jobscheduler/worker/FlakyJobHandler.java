@@ -18,7 +18,7 @@ public class FlakyJobHandler implements JobHandler {
 
     @Override
     public String execute(String payload) throws Exception {
-        Thread.sleep(300);
+        Thread.sleep(10);
         if (ThreadLocalRandom.current().nextBoolean()) {
             throw new RuntimeException("Simulated transient failure for payload: " + payload);
         }
